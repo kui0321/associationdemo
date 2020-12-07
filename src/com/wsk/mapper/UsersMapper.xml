@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wsk.mapper.UsersMapper">
+
+    <!--    通过resultMap标签解决实体与结果集的映射-->
+    <resultMap id="usersMapper" type="com.wsk.pojo.Users">
+        <id property="userid" column="id" />
+        <result property="username" column="name"/>
+        <result property="usersex" column="sex"/>
+    </resultMap>
+    <select id="selectUsersAll" resultMap="usersMapper">
+        select userid as id,username as name,usersex as sex from users
+    </select>
+
+<!--    一对一的关联查询映射-->
+    <resultMap id="usersAndRolesMapper" type="com.wsk.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <association property="roles" javaType="com.wsk.pojo.Roles">
+            <id property="roleid" column="roleid" />
+            <result property="rolename" column="rolename"/>
+        </association>
+    </resultMap>
+
+<!--    根据用户Id查询用户与角色-->
+    <select id="selectUsersAndRoles" resultMap="usersAndRolesMapper">
+        select * from users as u,roles as a where u.userid = a.user_id and u.userid = #{userid}
+    </select>
+
+<!--    一对多映射的关联查询-->
+    <resultMap id="usersAndOrdersMapper" type="com.wsk.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.wsk.pojo.Orders">
+            <id property="orderid" column="orderid"/>
+            <result property="orderprice" column="orderprice"/>
+        </collection>
+    </resultMap>
+
+<!--    根据用户ID查询用户以及该用户所对应的所有订单-->
+    <select id="selectUsersAndOrders" resultMap="usersAndOrdersMapper">
+        select * from users as u, orders as o where u.userid = o.user_id and u.userid = #{userid}
+    </select>
+
+
+<!--    多表查询关联-->
+    <resultMap id="usersAndOrdersAndItems" type="com.wsk.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.wsk.pojo.Orders">
+            <id property="orderid" column="orderid"/>
+            <result property="orderprice" column="orderprice"/>
+            <collection property="items" ofType="com.wsk.pojo.Items">
+                <id property="itemid" column="itemid"/>
+                <result property="itemid" column="itemid"/>
+                <result property="itemname" column="itemname"/>
+                <result property="itemprice" column="itemprice"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+<!--    根据用户Id查询用户预订单以及订单中所包含的商品-->
+    <select id="selectUsersAndOrdersAndItems" resultMap="usersAndOrdersAndItems">
+        select * from users as u, orders as o, orders_items as oi, items as i
+        where u.userid = o.user_id and o.orderid = oi.order_id and oi.item_id = i.itemid and u.userid = #{userid}
+    </select>
+
+<!--配置延迟加载-->
+    <resultMap id="usersAndOrdersMapperLazy" type="com.wsk.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.wsk.pojo.Orders" fetchType="lazy" select="selectOrderById" column="userid"/>
+    </resultMap>
+
+    <select id="selectUsersByIdLazy" resultMap="usersAndOrdersMapperLazy">
+        select * from users where userid = #{userid}
+    </select>
+
+    <select id="selectOrderById" resultType="com.wsk.pojo.Orders">
+        select * from orders where user_id = #{userid}
+    </select>
+
+</mapper>
